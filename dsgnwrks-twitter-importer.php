@@ -6,7 +6,7 @@ Description: Helps you to backup your tweets while allowing you to have a site t
 Author URI: http://dsgnwrks.pro
 Author: DsgnWrks
 Donate link: http://dsgnwrks.pro/give/
-Version: 1.1.0
+Version: 1.1.1
 */
 
 define( '_DWTW_PATH', plugin_dir_path( __FILE__ ) );
@@ -177,8 +177,16 @@ class DsgnWrksTwitter {
 		$id = $_POST[$this->optkey]['username'];
 		if ( !isset( $_GET['tweetimport'] ) || empty( $id ) ) return;
 
-		// @TODO https://dev.twitter.com/docs/working-with-timelines
-		$tweets = $this->twitterwp()->get_tweets( $id, 200 );
+		$twitterwp = $this->twitterwp();
+
+		// Filter to override TwitterWP method for getting tweets
+		$tweets = apply_filters( 'dw_twitter_api_get_tweets', null, $twitterwp, $this );
+
+		// If no override, proceed as usual
+		if ( null === $tweets ) {
+			// @TODO https://dev.twitter.com/docs/working-with-timelines
+			$tweets = $twitterwp->get_tweets( $id, 200 );
+		}
 
 		if ( is_wp_error( $tweets ) ) {
 			echo '<div id="message" class="error"><p>'. implode( '<br/>', $tweets->get_error_messages( 'twitterwp_error' ) ) . '</p></div>';
